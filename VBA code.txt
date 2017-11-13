@@ -1,4 +1,5 @@
-Public Unlocked As Boolean
+Public actsht As String         'store active sheet to be selected again after saving
+Public ButtonPressed As String  'which button did the user press?
 
 Sub HideSheets()
 'https://www.mrexcel.com/forum/excel-questions/8050-macro-hide-all-sheets-except-one.html
@@ -14,6 +15,8 @@ Next sht
 End Sub
 
 Sub UnhideSheets(Scope As String)
+'Source: https://stackoverflow.com/questions/37689847/creating-an-array-from-a-range-in-vba
+'Source: https://stackoverflow.com/questions/12642164/check-if-value-exists-in-column-in-vba
 Dim i As Integer
 Dim SheetArray As Variant
 Dim ShtNames() As String
@@ -48,26 +51,6 @@ Select Case Scope
 
 End Sub
 
-'Source: https://answers.microsoft.com/en-us/office/forum/office_2010-excel/how-to-password-protect-a-single-tab-in-a-workbook/934ceaeb-a6e8-400b-8123-0e2d393ff94b
-
-Private Sub Workbook_SheetActivate(ByVal Sh As Object)
-''Dim MySheets As String, Response As String
-
-'Source: https://stackoverflow.com/questions/37689847/creating-an-array-from-a-range-in-vba
-''Dim SheetArray As Variant
-''SheetArray = Sheets("VBA").ListObjects("ProtectSheets").DataBodyRange.Value
-'Source: https://stackoverflow.com/questions/12642164/check-if-value-exists-in-column-in-vba
-''If Not IsError(Application.Match(ActiveSheet.Name, SheetArray, 0)) And Unlocked = False Then
-''ActiveSheet.Visible = False
-''    Response = InputBox("Enter password to view sheet")
-''        If Response = "MyPass" Then
-''            UnhideSheets
-''            Unlocked = True
-''        End If
-''End If
-''UnhideSheets
-End Sub
-
 Private Sub Workbook_Open()
 HideSheets
 End Sub
@@ -77,55 +60,41 @@ HideSheets
 End Sub
 
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
+'store active sheet name to be opened again after saving
+'hide all sheets before saving
+actsht = ActiveSheet.Name
 HideSheets
 End Sub
 
 Private Sub Workbook_AfterSave(ByVal Success As Boolean)
-Dim actsht As Object
-Dim actrange As Object
-
-actsht = ActiveSheet
-actrange = Selection
-
-If Unlocked = True Then
-    UnhideSheets ("All")
-    ActiveSheet = actsht
-    Selection = actrange
-End If
+'reopen the sheets that were unhiden before the safe
+UnhideSheets (ButtonPressed)
+Sheets(actsht).Select
 End Sub
 
 
 Sub Consommation_Click()
 
-UnhideSheets ("Consommation")
+ButtonPressed = "Consommation"
+UnhideSheets (ButtonPressed)
 
 End Sub
 
 Sub Finances_Click()
 
-UnhideSheets ("Finances")
+ButtonPressed = "Finances"
+UnhideSheets (ButtonPressed)
 
 End Sub
 
 Sub VueGlobal_Click()
 Dim Response As String
 
+'Source: https://answers.microsoft.com/en-us/office/forum/office_2010-excel/how-to-password-protect-a-single-tab-in-a-workbook/934ceaeb-a6e8-400b-8123-0e2d393ff94b
 Response = InputBox("Enter password to view all sheets.")
 If Response = "MyPass" Then
-    UnhideSheets ("All")
-    Unlocked = True
+    ButtonPressed = "All"
+    UnhideSheets (ButtonPressed)
 End If
 
 End Sub
-
-Modules:
-
-
-Public Function ModDate()
-ModDate = Format(FileDateTime(ThisWorkbook.FullName), "d mmm yyyy - h:n")
-End Function
-
-'Source: https://www.extendoffice.com/documents/excel/949-excel-last-modified-user-name.html
-Public Function LastAuthor()
-LastAuthor = ActiveWorkbook.BuiltinDocumentProperties("Last Author")
-End Function
